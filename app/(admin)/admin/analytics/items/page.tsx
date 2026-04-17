@@ -100,7 +100,7 @@ export default function ItemsAnalyticsPage() {
 
         const result = await apiFetch<{
           items: ItemAnalytics[]
-        }>(`/api/analytics/items_performance.php?${params.toString()}`)
+        }>(`analytics/items_performance.php?${params.toString()}`)
 
         setItems(result.items)
       } catch (error) {

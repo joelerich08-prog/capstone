@@ -129,7 +129,7 @@ export default function SalesAnalyticsPage() {
         worstDay: SalesDataPoint | null
         avgDailySales: number
         avgDailyTransactions: number
-      }>(`/api/analytics/sales_summary.php?${params.toString()}`)
+      }>(`analytics/sales_summary.php?${params.toString()}`)
 
       setSalesData(result.salesData)
       setPaymentData(result.paymentData)

@@ -127,7 +127,7 @@ export default function ProfitabilityAnalyticsPage() {
         productData: ProductProfitability[]
         timeSeriesData: TimeSeriesData[]
         previousPeriodMetrics: ProfitabilityMetrics
-      }>(`/api/analytics/profitability.php?${params.toString()}`)
+      }>(`analytics/profitability.php?${params.toString()}`)
 
       setMetrics(result.metrics)
       setCategoryData(result.categoryData)
