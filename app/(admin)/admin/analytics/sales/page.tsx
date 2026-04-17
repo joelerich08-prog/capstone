@@ -43,7 +43,7 @@ import {
 } from 'recharts'
 import { ProfitabilitySummary } from '@/components/analytics/profitability-summary'
 
-const COLORS = ['#22c55e', '#3b82f6', '#8b5cf6']
+const COLORS = ['#16a34a', '#1d4ed8', '#7c3aed']
 
 interface SalesDataPoint {
   date: string
@@ -382,7 +382,7 @@ export default function SalesAnalyticsPage() {
             <CardDescription>Daily sales over the selected period</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
+            <div className="h-[300px] rounded-lg border border-slate-200 bg-slate-100 p-4 shadow-sm">
               {isLoading ? (
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                   Loading sales analytics...
@@ -417,7 +417,7 @@ export default function SalesAnalyticsPage() {
                       return [formatCurrency(value), 'Sales']
                     }) as any}
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--background))',
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                     }}
@@ -449,7 +449,7 @@ export default function SalesAnalyticsPage() {
             <CardDescription>Distribution by payment type</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px]">
+            <div className="h-[200px] rounded-lg border border-slate-200 bg-slate-100 p-4 shadow-sm">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -470,7 +470,7 @@ export default function SalesAnalyticsPage() {
                   <Tooltip
                     formatter={((value: any) => formatCurrency(value)) as any}
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--background))',
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                     }}
@@ -508,7 +508,7 @@ export default function SalesAnalyticsPage() {
           <CardDescription>Number of transactions per day</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[250px]">
+          <div className="h-[250px] rounded-lg border border-slate-200 bg-slate-100 p-4 shadow-sm">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salesData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -524,7 +524,7 @@ export default function SalesAnalyticsPage() {
                 <Tooltip
                   formatter={((value: any) => [value, 'Transactions']) as any}
                   contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
+                    backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
                   }}
@@ -573,3 +573,5 @@ export default function SalesAnalyticsPage() {
     </DashboardShell>
   )
 }
+
+

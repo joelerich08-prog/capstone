@@ -52,8 +52,8 @@ import {
 import { ProfitabilitySummary } from '@/components/analytics/profitability-summary'
 
 const CHART_COLORS = [
-  '#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6',
-  '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#6366f1'
+  '#1d4ed8', '#16a34a', '#ca8a04', '#dc2626', '#7c3aed',
+  '#0d9488', '#be185d', '#65a30d', '#ea580c', '#4f46e5'
 ]
 
 interface ItemAnalytics {
@@ -244,7 +244,7 @@ export default function ItemsAnalyticsPage() {
               {analyticsError}
             </div>
           ) : topItems.length > 0 ? (
-            <div className="h-[350px]">
+            <div className="h-[350px] rounded-lg border border-slate-200 bg-slate-100 p-4 shadow-sm">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={topItems}
@@ -268,7 +268,7 @@ export default function ItemsAnalyticsPage() {
                   <Tooltip
                     formatter={((value: any) => [formatCurrency(value), 'Revenue']) as any}
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--background))',
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                     }}
@@ -527,3 +527,5 @@ export default function ItemsAnalyticsPage() {
     </DashboardShell>
   )
 }
+
+

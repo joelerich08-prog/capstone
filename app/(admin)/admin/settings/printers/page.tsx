@@ -481,45 +481,6 @@ export default function PrintersPage() {
             />
           </div>
           <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Print Customer Copy</p>
-              <p className="text-sm text-muted-foreground">
-                Print an additional copy for the customer
-              </p>
-            </div>
-            <Switch 
-              checked={settings.printSettings.printCustomerCopy} 
-              onCheckedChange={(checked) => updatePrintSettings({ printCustomerCopy: checked })}
-            />
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Include Store Logo</p>
-              <p className="text-sm text-muted-foreground">
-                Print store logo on receipts
-              </p>
-            </div>
-            <Switch 
-              checked={settings.printSettings.includeLogo} 
-              onCheckedChange={(checked) => updatePrintSettings({ includeLogo: checked })}
-            />
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Include Barcode</p>
-              <p className="text-sm text-muted-foreground">
-                Include barcode for transaction lookup
-              </p>
-            </div>
-            <Switch 
-              checked={settings.printSettings.includeBarcode} 
-              onCheckedChange={(checked) => updatePrintSettings({ includeBarcode: checked })}
-            />
-          </div>
-          <Separator />
           <div className="grid gap-2">
             <Label htmlFor="footerMessage">Receipt Footer Message</Label>
             <Input

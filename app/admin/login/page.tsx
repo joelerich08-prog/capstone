@@ -34,7 +34,7 @@ export default function StaffLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo and Title */}
         <div className="flex flex-col items-center gap-3 text-center">

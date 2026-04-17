@@ -32,22 +32,36 @@ import {
 import { DatePickerWithRange } from "@/components/shared/date-range-picker"
 import { useActivityLogs } from "@/contexts/activity-logs-context"
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns"
-import { Search, Download, Filter, LogIn, Plus, Pencil, Trash2, RefreshCw, X, ChevronLeft, ChevronRight, ArrowUpDown, Eye } from "lucide-react"
+import { Search, Download, Filter, LogIn, Plus, Pencil, Trash2, RefreshCw, X, ChevronLeft, ChevronRight, ArrowUpDown, Eye, ArrowRightLeft, Scissors, Package } from "lucide-react"
 import type { UserRole } from "@/lib/types"
 import type { DateRange } from "react-day-picker"
 
 const actionIcons: Record<string, React.ReactNode> = {
   login: <LogIn className="h-4 w-4" />,
+  logout: <LogIn className="h-4 w-4" />,
   create: <Plus className="h-4 w-4" />,
   update: <Pencil className="h-4 w-4" />,
   delete: <Trash2 className="h-4 w-4" />,
+  transfer: <ArrowRightLeft className="h-4 w-4" />,
+  breakdown: <Scissors className="h-4 w-4" />,
+  receive_stock: <Package className="h-4 w-4" />,
+  adjust_stock: <ArrowUpDown className="h-4 w-4" />,
+  order_status_update: <RefreshCw className="h-4 w-4" />,
+  transaction_refund: <Trash2 className="h-4 w-4" />,
 }
 
 const actionColors: Record<string, string> = {
   login: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  logout: "bg-slate-500/10 text-slate-500 border-slate-500/20",
   create: "bg-green-500/10 text-green-500 border-green-500/20",
   update: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
   delete: "bg-red-500/10 text-red-500 border-red-500/20",
+  transfer: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  breakdown: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  receive_stock: "bg-green-500/10 text-green-500 border-green-500/20",
+  adjust_stock: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+  order_status_update: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+  transaction_refund: "bg-rose-500/10 text-rose-500 border-rose-500/20",
 }
 
 const roleColors: Record<UserRole, string> = {
@@ -62,6 +76,11 @@ const moduleLabels: Record<string, string> = {
   inventory: "Inventory",
   users: "User Management",
   settings: "Settings",
+  orders: "Orders",
+  order: "Orders",
+  transaction: "Transactions",
+  receive: "Inventory",
+  adjust: "Inventory",
 }
 
 type SortField = "timestamp" | "userName" | "action" | "module"
@@ -237,6 +256,7 @@ export default function ActivityLogPage() {
                   <SelectItem value="inventory">Inventory</SelectItem>
                   <SelectItem value="users">Users</SelectItem>
                   <SelectItem value="settings">Settings</SelectItem>
+                  <SelectItem value="orders">Orders</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={actionFilter} onValueChange={(v) => { setActionFilter(v); setCurrentPage(1) }}>

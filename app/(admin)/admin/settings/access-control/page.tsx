@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner"
 import { Shield, Package, ShoppingCart, BarChart3, Settings, Users, Save, RotateCcw, CheckSquare, XSquare, LayoutDashboard, Truck } from "lucide-react"
 import { useSettings, type UserRole, type RolePermissions, type ModulePermission } from "@/contexts/settings-context"
+import { useAuth } from "@/contexts/auth-context"
 
 interface ModuleConfig {
   module: keyof RolePermissions
@@ -94,14 +95,30 @@ const roleColors: Record<UserRole, string> = {
 
 const roles: UserRole[] = ["admin", "cashier", "stockman"]
 
+const getVisibleModules = (role: UserRole) => {
+  const excludedModulesForNonAdmin: Array<keyof RolePermissions> = [
+    'reports',
+    'users',
+    'settings',
+  ]
+
+  if (role === 'admin') {
+    return moduleConfigs
+  }
+
+  return moduleConfigs.filter((moduleConfig) => !excludedModulesForNonAdmin.includes(moduleConfig.module))
+}
+
 export default function AccessControlPage() {
   const { 
     settings, 
     togglePermission, 
     toggleAllModulePermissions, 
     resetPermissionsToDefaults,
+    updateSettings,
     saveSettings 
   } = useSettings()
+  const { refreshPermissions } = useAuth()
   
   const [hasChanges, setHasChanges] = useState(false)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
@@ -126,13 +143,22 @@ export default function AccessControlPage() {
       toast.error("Failed to save access control settings")
       return
     }
+    // Refresh permissions in auth context so navigation updates immediately
+    await refreshPermissions()
     toast.success("Access control settings saved successfully")
     setHasChanges(false)
   }
 
-  const handleReset = () => {
-    resetPermissionsToDefaults()
+  const handleReset = async () => {
+    const newSettings = resetPermissionsToDefaults()
+    const saved = await updateSettings({ permissions: newSettings.permissions })
     setShowResetDialog(false)
+    if (!saved) {
+      toast.error("Failed to reset permissions to defaults")
+      return
+    }
+    // Refresh permissions in auth context
+    await refreshPermissions()
     setHasChanges(false)
     toast.success("Permissions reset to defaults")
   }
@@ -187,7 +213,7 @@ export default function AccessControlPage() {
               </div>
             )}
             
-            {moduleConfigs.map((moduleConfig) => {
+            {getVisibleModules(role).map((moduleConfig) => {
               const perms = settings.permissions[role][moduleConfig.module]
               const { enabled, total } = getModulePermissionCount(role, moduleConfig.module)
               

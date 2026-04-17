@@ -32,7 +32,7 @@ import {
 } from "recharts"
 import { pdf, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 
-const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+const COLORS = ['#16a34a', '#1d4ed8', '#ca8a04', '#dc2626', '#7c3aed', '#0d9488']
 
 const styles = StyleSheet.create({
   page: {
@@ -371,7 +371,7 @@ export default function ReportsPage() {
                   <CardDescription>Revenue distribution across product categories</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[300px]">
+                  <div className="h-[300px] rounded-lg border border-slate-200 bg-slate-100 p-4 shadow-sm">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -454,3 +454,5 @@ export default function ReportsPage() {
     </DashboardShell>
   )
 }
+
+

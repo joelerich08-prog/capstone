@@ -28,16 +28,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import { Store, Shield, Receipt, Save } from "lucide-react"
+import { Store, Save } from "lucide-react"
 import { useSettings } from "@/contexts/settings-context"
 
 export default function SettingsPage() {
   const { 
     settings, 
     updateStoreSettings, 
-    updateNotificationSettings, 
-    updatePOSSettings, 
-    updateSecuritySettings,
     saveSettings 
   } = useSettings()
   
@@ -56,18 +53,10 @@ export default function SettingsPage() {
   return (
     <DashboardShell title="Settings" description="Manage your store configuration" allowedRoles={['admin']}>
       <Tabs defaultValue="store" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px] lg:grid-cols-3">
+        <TabsList className="grid w-full grid-cols-1 lg:w-[400px] lg:grid-cols-1">
           <TabsTrigger value="store" className="gap-2">
             <Store className="h-4 w-4" />
             <span className="hidden sm:inline">Store</span>
-          </TabsTrigger>
-          <TabsTrigger value="pos" className="gap-2">
-            <Receipt className="h-4 w-4" />
-            <span className="hidden sm:inline">POS</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
         </TabsList>
 
@@ -152,249 +141,6 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-        </TabsContent>
-
-
-        <TabsContent value="pos" className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>POS Settings</CardTitle>
-              <CardDescription>
-                Configure point-of-sale behavior
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Auto-print Receipt</p>
-                    <p className="text-sm text-muted-foreground">
-                      Automatically print receipt after each transaction
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={settings.pos.autoPrintReceipt} 
-                    onCheckedChange={(checked) => updatePOSSettings({ autoPrintReceipt: checked })} 
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Quick Add Mode</p>
-                    <p className="text-sm text-muted-foreground">
-                      Single click to add items to cart
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={settings.pos.quickAddMode} 
-                    onCheckedChange={(checked) => updatePOSSettings({ quickAddMode: checked })} 
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Show Product Images</p>
-                    <p className="text-sm text-muted-foreground">
-                      Display product images in POS terminal
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={settings.pos.showProductImages} 
-                    onCheckedChange={(checked) => updatePOSSettings({ showProductImages: checked })} 
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Require Customer Info</p>
-                    <p className="text-sm text-muted-foreground">
-                      Require customer details for each transaction
-                    </p>
-                  </div>
-                  <Switch 
-                    checked={settings.pos.requireCustomerInfo} 
-                    onCheckedChange={(checked) => updatePOSSettings({ requireCustomerInfo: checked })} 
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Methods</CardTitle>
-              <CardDescription>
-                Enable or disable payment options
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
-                    <span className="text-lg font-bold text-green-500">P</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Cash</p>
-                    <p className="text-sm text-muted-foreground">Accept cash payments</p>
-                  </div>
-                </div>
-                <Switch 
-                  checked={settings.pos.enableCashPayment} 
-                  onCheckedChange={(checked) => updatePOSSettings({ enableCashPayment: checked })} 
-                />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                    <span className="text-sm font-bold text-blue-500">G</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">GCash</p>
-                    <p className="text-sm text-muted-foreground">Accept GCash e-wallet</p>
-                  </div>
-                </div>
-                <Switch 
-                  checked={settings.pos.enableGCashPayment} 
-                  onCheckedChange={(checked) => updatePOSSettings({ enableGCashPayment: checked })} 
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="security" className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Security Settings</CardTitle>
-              <CardDescription>
-                Manage security and access controls
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Two-Factor Authentication</p>
-                  <p className="text-sm text-muted-foreground">
-                    Require 2FA for admin accounts
-                  </p>
-                </div>
-                <Switch 
-                  checked={settings.security.twoFactorEnabled} 
-                  onCheckedChange={(checked) => updateSecuritySettings({ twoFactorEnabled: checked })} 
-                />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Session Timeout</p>
-                  <p className="text-sm text-muted-foreground">
-                    Auto-logout after inactivity
-                  </p>
-                </div>
-                <Select 
-                  value={settings.security.sessionTimeout.toString()} 
-                  onValueChange={(value) => updateSecuritySettings({ sessionTimeout: parseInt(value) })}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="15">15 minutes</SelectItem>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="60">1 hour</SelectItem>
-                    <SelectItem value="0">Never</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Login Attempts</p>
-                  <p className="text-sm text-muted-foreground">
-                    Lock account after failed attempts
-                  </p>
-                </div>
-                <Select 
-                  value={settings.security.maxLoginAttempts.toString()} 
-                  onValueChange={(value) => updateSecuritySettings({ maxLoginAttempts: parseInt(value) })}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 attempts</SelectItem>
-                    <SelectItem value="5">5 attempts</SelectItem>
-                    <SelectItem value="10">10 attempts</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Management</CardTitle>
-              <CardDescription>
-                Backup and data retention settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Auto-Backup</p>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically backup data
-                  </p>
-                </div>
-                <Switch 
-                  checked={settings.security.autoBackup} 
-                  onCheckedChange={(checked) => updateSecuritySettings({ autoBackup: checked })} 
-                />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Backup Frequency</p>
-                  <p className="text-sm text-muted-foreground">
-                    How often to backup data
-                  </p>
-                </div>
-                <Select 
-                  value={settings.security.backupFrequency} 
-                  onValueChange={(value: 'daily' | 'weekly' | 'monthly') => updateSecuritySettings({ backupFrequency: value })}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Separator />
-              <div className="space-y-2">
-                <Label>Data Retention Period</Label>
-                <Select 
-                  value={settings.security.dataRetentionDays.toString()} 
-                  onValueChange={(value) => updateSecuritySettings({ dataRetentionDays: parseInt(value) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="90">90 days</SelectItem>
-                    <SelectItem value="180">6 months</SelectItem>
-                    <SelectItem value="365">1 year</SelectItem>
-                    <SelectItem value="730">2 years</SelectItem>
-                    <SelectItem value="0">Forever</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
 

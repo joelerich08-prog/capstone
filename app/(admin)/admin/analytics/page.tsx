@@ -51,8 +51,8 @@ import {
   AreaChart,
 } from 'recharts'
 
-const PROFIT_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
-const COST_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16']
+const PROFIT_COLORS = ['#16a34a', '#1d4ed8', '#ca8a04', '#dc2626', '#7c3aed', '#0d9488']
+const COST_COLORS = ['#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#4f46e5']
 
 interface ProfitabilityMetrics {
   totalRevenue: number
@@ -412,24 +412,24 @@ export default function ProfitabilityAnalyticsPage() {
             <CardDescription>Revenue and profit performance over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[350px]">
+            <div className="h-[350px] rounded-lg border border-slate-200 bg-slate-100 p-4 shadow-sm">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeSeriesData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis
                     dataKey="date"
-                    className="text-xs"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    className="text-xs text-foreground"
+                    tick={{ fill: 'hsl(var(--foreground))' }}
                   />
                   <YAxis
-                    className="text-xs"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    className="text-xs text-foreground"
+                    tick={{ fill: 'hsl(var(--foreground))' }}
                     tickFormatter={(value: any) => formatPesoShort(Number(value))}
                   />
                   <Tooltip
                     formatter={(value: any, name: any) => [formatCurrency(value), name]}
                     contentStyle={{
-                      backgroundColor: 'hsl(var(--background))',
+                      backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
                     }}
@@ -438,8 +438,8 @@ export default function ProfitabilityAnalyticsPage() {
                     type="monotone"
                     dataKey="revenue"
                     stackId="1"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
+                    stroke="#1d4ed8"
+                    fill="#1d4ed8"
                     fillOpacity={0.6}
                     name="Sales"
                   />
@@ -447,8 +447,8 @@ export default function ProfitabilityAnalyticsPage() {
                     type="monotone"
                     dataKey="profit"
                     stackId="2"
-                    stroke="#22c55e"
-                    fill="#22c55e"
+                    stroke="#16a34a"
+                    fill="#16a34a"
                     fillOpacity={0.8}
                     name="Gross Profit"
                   />
@@ -506,3 +506,4 @@ export default function ProfitabilityAnalyticsPage() {
     </DashboardShell>
   )
 }
+
