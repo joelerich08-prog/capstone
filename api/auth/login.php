@@ -67,12 +67,23 @@ foreach ($perms as $perm) {
 // Store session securely
 session_regenerate_id(true);
 $_SESSION['user_id'] = $user['id'];
+$_SESSION['user_name'] = $user['name'];
 $_SESSION['user_role'] = $user['role'];
 $_SESSION['permissions'] = $permissions;
 
 // Update lastLogin
 $stmt = $pdo->prepare("UPDATE users SET lastLogin = NOW() WHERE id = ?");
 $stmt->execute([$user['id']]);
+
+// Log successful login activity
+$activityId = bin2hex(random_bytes(16));
+$stmt = $pdo->prepare("INSERT INTO activity_logs (id, userId, userName, action, details) VALUES (?, ?, ?, 'login', ?)");
+$stmt->execute([
+    $activityId,
+    $user['id'],
+    $user['name'],
+    "User logged in from IP address: " . ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? 'unknown')
+]);
 
 $response = [
     'id' => $user['id'],

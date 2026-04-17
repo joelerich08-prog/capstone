@@ -77,14 +77,13 @@ try {
     $orderNo = 'ORD-' . date('ymd') . '-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
 
     $stmt = $pdo->prepare("
-        INSERT INTO orders (id, orderNo, source, userId, customerName, customerPhone, total, status, notes, createdAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())
+        INSERT INTO orders (id, orderNo, source, customerName, customerPhone, total, status, notes, createdAt)
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, NOW())
     ");
     $stmt->execute([
         $orderId,
         $orderNo,
         $orderSource,
-        $userId,
         $customerName,
         $customerPhone,
         $total,
@@ -118,7 +117,6 @@ try {
         'id' => $orderId,
         'orderNo' => $orderNo,
         'source' => $orderSource,
-        'userId' => $userId,
         'customerName' => $customerName,
         'customerPhone' => $customerPhone,
         'items' => $items,

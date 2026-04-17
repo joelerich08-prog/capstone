@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../middleware/cors.php';
 require_once __DIR__ . '/../../config/db.php';
 session_start();
 
@@ -19,6 +20,10 @@ if (!$data || !is_array($data)) {
 $store = isset($data['store']) && is_array($data['store']) ? $data['store'] : null;
 $pos = isset($data['pos']) && is_array($data['pos']) ? $data['pos'] : null;
 $printers = isset($data['printers']) && is_array($data['printers']) ? $data['printers'] : null;
+$permissions = isset($data['permissions']) && is_array($data['permissions']) ? $data['permissions'] : null;
+$validRoles = ['admin', 'stockman', 'cashier'];
+$validModules = ['dashboard', 'pos', 'inventory', 'products', 'suppliers', 'reports', 'users', 'settings'];
+$validActions = ['view', 'create', 'edit', 'delete'];
 
 $pdo = Database::getInstance();
 
@@ -47,14 +52,13 @@ try {
 
     if ($pos !== null) {
         $stmt = $pdo->prepare(
-            'INSERT INTO pos_settings (id, quickAddMode, showProductImages, autoPrintReceipt, requireCustomerInfo, enableCashPayment, enableGCashPayment) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE quickAddMode = VALUES(quickAddMode), showProductImages = VALUES(showProductImages), autoPrintReceipt = VALUES(autoPrintReceipt), requireCustomerInfo = VALUES(requireCustomerInfo), enableCashPayment = VALUES(enableCashPayment), enableGCashPayment = VALUES(enableGCashPayment)'
+            'INSERT INTO pos_settings (id, quickAddMode, showProductImages, autoPrintReceipt, enableCashPayment, enableGCashPayment) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE quickAddMode = VALUES(quickAddMode), showProductImages = VALUES(showProductImages), autoPrintReceipt = VALUES(autoPrintReceipt), enableCashPayment = VALUES(enableCashPayment), enableGCashPayment = VALUES(enableGCashPayment)'
         );
         $stmt->execute([
             'default',
             $pos['quickAddMode'] ? 1 : 0,
             $pos['showProductImages'] ? 1 : 0,
             $pos['autoPrintReceipt'] ? 1 : 0,
-            $pos['requireCustomerInfo'] ? 1 : 0,
             $pos['enableCashPayment'] ? 1 : 0,
             $pos['enableGCashPayment'] ? 1 : 0,
         ]);
@@ -84,9 +88,65 @@ try {
         }
     }
 
+    if ($permissions !== null) {
+        $deleteRoleStmt = $pdo->prepare('DELETE FROM role_permissions WHERE role = ?');
+        $insertPermissionStmt = $pdo->prepare('INSERT INTO role_permissions (role, module, action, allowed) VALUES (?, ?, ?, ?)');
+
+        foreach ($permissions as $role => $modules) {
+            if (!is_string($role) || !in_array($role, $validRoles, true) || !is_array($modules)) {
+                continue;
+            }
+
+            $deleteRoleStmt->execute([$role]);
+
+            foreach ($modules as $module => $actions) {
+                if (!is_string($module) || !in_array($module, $validModules, true) || !is_array($actions)) {
+                    continue;
+                }
+
+                foreach ($actions as $action => $allowed) {
+                    if (!is_string($action) || !in_array($action, $validActions, true)) {
+                        continue;
+                    }
+
+                    $insertPermissionStmt->execute([
+                        $role,
+                        $module,
+                        $action,
+                        $allowed ? 1 : 0,
+                    ]);
+                }
+            }
+        }
+    }
+
     $pdo->commit();
 
-    echo json_encode(['success' => true]);
+    // Reload permissions in session to reflect any changes
+    $responseData = ['success' => true];
+    if (isset($_SESSION['user_role'])) {
+        $permissions = [];
+        $stmt = $pdo->prepare("SELECT module, action, allowed FROM role_permissions WHERE role = ? ORDER BY module, action");
+        $stmt->execute([$_SESSION['user_role']]);
+        $perms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($perms as $perm) {
+            $module = $perm['module'];
+            $action = $perm['action'];
+            $permissions[$module] = $permissions[$module] ?? [
+                'view' => false,
+                'create' => false,
+                'edit' => false,
+                'delete' => false,
+            ];
+            $permissions[$module][$action] = (bool)$perm['allowed'];
+        }
+
+        $_SESSION['permissions'] = $permissions;
+        $responseData['permissions'] = $permissions;
+    }
+
+    echo json_encode($responseData);
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();

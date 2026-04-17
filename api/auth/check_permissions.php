@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../middleware/cors.php';
+
 function requirePermission(string $module, string $action): void {
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();

@@ -62,7 +62,6 @@ try {
             'total' => (float)$row['total'],
             'paymentType' => $row['paymentType'],
             'cashierId' => $row['cashierId'],
-            'customerId' => $row['customerId'] ?? null,
             'status' => $row['status'] ?? 'completed',
             'createdAt' => $row['createdAt']
         ];

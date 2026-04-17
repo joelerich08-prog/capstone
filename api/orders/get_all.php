@@ -55,7 +55,6 @@ try {
     $orders[] = [
         'id' => $row['id'],
         'orderNo' => $row['orderNo'],
-        'userId' => $row['userId'] ?? null,
         'customerName' => $row['customerName'],
         'customerPhone' => $row['customerPhone'],
         'items' => $items,

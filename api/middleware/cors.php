@@ -46,15 +46,15 @@ session_set_cookie_params([
 ]);
 
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Cache-Bust');
 header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Max-Age: 86400'); // Cache preflight for 24 hours
 
 // Handle preflight OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
+header('Access-Control-Max-Age: 86400'); // Cache preflight for 24 hours
 
 // Set content type for JSON responses
 header('Content-Type: application/json');

@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../middleware/cors.php';
 require_once __DIR__ . '/../../config/db.php';
 session_start();
 
@@ -31,7 +32,6 @@ $discount = (float)$input['discount'];
 $total = (float)$input['total'];
 $paymentType = trim($input['paymentType']);
 $cashierId = trim($input['cashierId']);
-$customerId = isset($input['customerId']) ? trim($input['customerId']) : null;
 $status = isset($input['status']) ? trim($input['status']) : 'completed';
 $invoiceNo = isset($input['invoiceNo']) ? trim($input['invoiceNo']) : 'INV-' . str_pad((string)rand(100000, 999999), 6, '0', STR_PAD_LEFT);
 
@@ -47,7 +47,7 @@ try {
     $pdo->beginTransaction();
 
     $transactionId = bin2hex(random_bytes(8));
-    $stmt = $pdo->prepare('INSERT INTO transactions (id, invoiceNo, subtotal, discount, total, paymentType, cashierId, customerId, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())');
+    $stmt = $pdo->prepare('INSERT INTO transactions (id, invoiceNo, subtotal, discount, total, paymentType, cashierId, status, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())');
     $stmt->execute([
         $transactionId,
         $invoiceNo,
@@ -56,7 +56,6 @@ try {
         $total,
         $paymentType,
         $cashierId,
-        $customerId,
         $status,
     ]);
 
@@ -90,7 +89,6 @@ try {
             'total' => $total,
             'paymentType' => $paymentType,
             'cashierId' => $cashierId,
-            'customerId' => $customerId,
             'status' => $status,
             'createdAt' => date('Y-m-d H:i:s'),
         ]

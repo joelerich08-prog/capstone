@@ -32,7 +32,6 @@ $defaultPOSSettings = [
     'quickAddMode' => true,
     'showProductImages' => true,
     'autoPrintReceipt' => false,
-    'requireCustomerInfo' => false,
     'enableCashPayment' => true,
     'enableGCashPayment' => true,
 ];
@@ -67,12 +66,35 @@ try {
             'quickAddMode' => (bool)$posRow['quickAddMode'],
             'showProductImages' => (bool)$posRow['showProductImages'],
             'autoPrintReceipt' => (bool)$posRow['autoPrintReceipt'],
-            'requireCustomerInfo' => (bool)$posRow['requireCustomerInfo'],
             'enableCashPayment' => (bool)$posRow['enableCashPayment'],
             'enableGCashPayment' => (bool)$posRow['enableGCashPayment'],
         ];
     } else {
         $posSettings = $defaultPOSSettings;
+    }
+
+    $permissions = [];
+    $stmt = $pdo->query('SELECT role, module, action, allowed FROM role_permissions ORDER BY role, module, action');
+    $rolePermRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($rolePermRows as $perm) {
+        $role = $perm['role'];
+        $module = $perm['module'];
+        $action = $perm['action'];
+
+        if (!isset($permissions[$role])) {
+            $permissions[$role] = [];
+        }
+
+        if (!isset($permissions[$role][$module])) {
+            $permissions[$role][$module] = [
+                'view' => false,
+                'create' => false,
+                'edit' => false,
+                'delete' => false,
+            ];
+        }
+
+        $permissions[$role][$module][$action] = (bool)$perm['allowed'];
     }
 
     $stmt = $pdo->query('SELECT id, name, type, connectionType, ipAddress, port, isDefault, status, paperSize, lastUsed FROM printer_devices');
@@ -82,6 +104,7 @@ try {
         'store' => $storeSettings,
         'pos' => $posSettings,
         'printers' => $printerDevices,
+        'permissions' => (object) $permissions,
     ]);
 } catch (Exception $e) {
     http_response_code(500);

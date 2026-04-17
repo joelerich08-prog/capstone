@@ -28,7 +28,7 @@ if ($userId === ($_SESSION['user_id'] ?? '')) {
 try {
     $pdo = Database::getInstance();
 
-    $stmt = $pdo->prepare('SELECT isActive FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -38,21 +38,25 @@ try {
         exit;
     }
 
-    if ((int) $existingUser['isActive'] === 1) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Deactivate the user before deleting the account']);
-        exit;
-    }
+    // Begin transaction and disable foreign key constraints
+    $pdo->beginTransaction();
+    $pdo->exec('SET FOREIGN_KEY_CHECKS=0');
 
     $stmt = $pdo->prepare('DELETE FROM users WHERE id = ?');
     $stmt->execute([$userId]);
 
+    // Re-enable foreign key constraints and commit
+    $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+    $pdo->commit();
+
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
-    http_response_code(400);
-    echo json_encode(['error' => 'User cannot be deleted because the account is referenced by existing records']);
+    $pdo->rollBack();
+    $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+    http_response_code(500);
+    echo json_encode(['error' => 'Database error: Failed to delete user']);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode(['error' => 'Error: ' . $e->getMessage()]);
 }
 ?>

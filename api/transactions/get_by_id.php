@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../middleware/cors.php';
 require_once __DIR__ . '/../../config/db.php';
 
 session_start();
@@ -73,7 +74,6 @@ try {
         'total' => (float)$row['total'],
         'paymentType' => $row['paymentType'],
         'cashierId' => $row['cashierId'],
-        'customerId' => $row['customerId'] ?? null,
         'status' => $row['status'] ?? 'completed',
         'createdAt' => $row['createdAt']
     ]);

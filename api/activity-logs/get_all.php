@@ -27,7 +27,14 @@ try {
             al.userName,
             COALESCE(u.role, 'admin') as userRole,
             al.action,
-            LOWER(SUBSTRING_INDEX(al.action, '_', 1)) as module,
+            CASE
+                WHEN al.action IN ('receive_stock', 'adjust_stock', 'breakdown', 'transfer') THEN 'inventory'
+                WHEN al.action IN ('order_status_update', 'transaction_refund') OR al.action LIKE 'order_%' OR al.action LIKE 'transaction_%' THEN 'orders'
+                WHEN al.action IN ('login', 'logout') THEN 'auth'
+                WHEN al.action LIKE 'user_%' THEN 'users'
+                WHEN al.action LIKE 'settings_%' THEN 'settings'
+                ELSE LOWER(SUBSTRING_INDEX(al.action, '_', 1))
+            END as module,
             al.details,
             '' as ipAddress,
             al.createdAt as timestamp

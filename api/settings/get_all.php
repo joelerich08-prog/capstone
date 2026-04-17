@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../middleware/cors.php';
 require_once __DIR__ . '/../../config/db.php';
 session_start();
 
@@ -31,7 +32,6 @@ $defaultPOSSettings = [
     'quickAddMode' => true,
     'showProductImages' => true,
     'autoPrintReceipt' => false,
-    'requireCustomerInfo' => false,
     'enableCashPayment' => true,
     'enableGCashPayment' => true,
 ];
@@ -66,7 +66,6 @@ try {
             'quickAddMode' => (bool)$posRow['quickAddMode'],
             'showProductImages' => (bool)$posRow['showProductImages'],
             'autoPrintReceipt' => (bool)$posRow['autoPrintReceipt'],
-            'requireCustomerInfo' => (bool)$posRow['requireCustomerInfo'],
             'enableCashPayment' => (bool)$posRow['enableCashPayment'],
             'enableGCashPayment' => (bool)$posRow['enableGCashPayment'],
         ];

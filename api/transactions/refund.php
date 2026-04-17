@@ -3,14 +3,11 @@ require_once __DIR__ . '/../middleware/cors.php';
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../includes/inventory.php';
 require_once __DIR__ . '/../includes/transaction-validation.php';
+require_once __DIR__ . '/../auth/check_permissions.php';
 
 session_start();
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] ?? null) !== 'admin') {
-    http_response_code(403);
-    echo json_encode(['error' => 'Forbidden']);
-    exit;
-}
+requirePermission('pos', 'edit');
 
 $input = json_decode(file_get_contents('php://input'), true);
 if (!$input || !isset($input['transactionId'])) {
