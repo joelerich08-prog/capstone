@@ -33,6 +33,20 @@ function buildUrl(input: string): string {
   return `${API_BASE_URL}/${normalizedInput}`
 }
 
+const PUBLIC_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '')
+
+export function resolveAssetUrl(input: string): string {
+  if (/^https?:\/\//i.test(input)) {
+    return input
+  }
+
+  if (input.startsWith('/')) {
+    return `${PUBLIC_BASE_URL}${input}`
+  }
+
+  return `${PUBLIC_BASE_URL}/${input}`
+}
+
 export interface ApiFetchOptions extends Omit<RequestInit, 'body'> {
   body?: BodyInit | Record<string, unknown> | null
 }
