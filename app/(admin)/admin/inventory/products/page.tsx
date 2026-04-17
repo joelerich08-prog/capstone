@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Fragment } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/auth-context'
 import { useInventory } from '@/contexts/inventory-context'
@@ -53,9 +53,9 @@ import {
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import type { Product } from '@/lib/types'
-import { apiFetch } from '@/lib/api-client'
+import { apiFetch, resolveAssetUrl } from '@/lib/api-client'
 import { formatPeso } from '@/lib/utils/currency'
-import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, RefreshCw, ChevronDown, ChevronRight, Package } from 'lucide-react'
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Eye, RefreshCw, ChevronDown, ChevronRight, Package, Upload, X, Image as ImageIcon, Camera, FileImage } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePagination } from '@/hooks/use-pagination'
 import { TablePagination } from '@/components/shared/table-pagination'
@@ -123,6 +123,195 @@ const generateVariantSkuPreview = (
   }
 
   return `${baseSku}-${suffix}`
+}
+
+// Enhanced File Upload Component
+interface FileUploadProps {
+  onFilesSelected: (files: File[]) => void
+  accept?: string
+  multiple?: boolean
+  maxSize?: number
+  className?: string
+}
+
+const FileUpload: React.FC<FileUploadProps> = ({
+  onFilesSelected,
+  accept = "image/*",
+  multiple = true,
+  maxSize = 5 * 1024 * 1024, // 5MB
+  className = ""
+}) => {
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const validateAndProcessFiles = (files: FileList | null) => {
+    if (!files) return
+
+    const validFiles: File[] = []
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+
+      if (!allowedTypes.includes(file.type)) {
+        toast.error(`Invalid file type: ${file.name}. Only JPG, PNG, GIF, and WebP are allowed.`)
+        continue
+      }
+
+      if (file.size > maxSize) {
+        toast.error(`File too large: ${file.name}. Maximum size is 5MB.`)
+        continue
+      }
+
+      validFiles.push(file)
+    }
+
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...validFiles])
+      onFilesSelected(validFiles)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    validateAndProcessFiles(e.dataTransfer.files)
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    validateAndProcessFiles(e.target.files)
+  }
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const clearAllFiles = () => {
+    setSelectedFiles([])
+  }
+
+  return (
+    <div className={`space-y-3 ${className}`}>
+      {/* Upload Area */}
+      <div
+        className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-all duration-200 cursor-pointer ${
+          isDragOver
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20'
+            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={accept}
+          multiple={multiple}
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
+        <div className="flex flex-col items-center space-y-2">
+          <div className={`p-3 rounded-full ${
+            isDragOver
+              ? 'bg-blue-100 dark:bg-blue-900/30'
+              : 'bg-gray-100 dark:bg-gray-800'
+          }`}>
+            <FileImage className={`w-6 h-6 ${
+              isDragOver
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-gray-500 dark:text-gray-400'
+            }`} />
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-base font-medium text-gray-900 dark:text-gray-100">
+              {isDragOver ? 'Drop images here' : 'Upload Product Images'}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Drag and drop images here, or click to browse
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              Supports JPG, PNG, GIF, WebP • Max 5MB each
+            </p>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-1"
+            onClick={(e) => {
+              e.stopPropagation()
+              fileInputRef.current?.click()
+            }}
+          >
+            <Camera className="w-4 h-4 mr-2" />
+            Choose Files
+          </Button>
+        </div>
+      </div>
+
+      {/* Selected Files Preview */}
+      {selectedFiles.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">
+              Selected Images ({selectedFiles.length})
+            </Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFiles}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Clear All
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="relative group">
+                <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  title="Remove image"
+                >
+                  ×
+                </button>
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate">
+                  {file.name}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function ProductsPage() {
@@ -209,6 +398,8 @@ export default function ProductsPage() {
   const [newBaseProductId, setNewBaseProductId] = useState('')
   const [newVariantName, setNewVariantName] = useState('')
   const [newVariantPriceAdjustment, setNewVariantPriceAdjustment] = useState('')
+  const [newImages, setNewImages] = useState<File[]>([])
+  const [newImageUrls, setNewImageUrls] = useState<string[]>([])
   
   // Edit form state
   const [editName, setEditName] = useState('')
@@ -218,6 +409,8 @@ export default function ProductsPage() {
   const [editRetailPrice, setEditRetailPrice] = useState('')
   const [editCategory, setEditCategory] = useState('')
   const [editIsActive, setEditIsActive] = useState(true)
+  const [editImages, setEditImages] = useState<string[]>([])
+  const [editNewImages, setEditNewImages] = useState<File[]>([])
   const [selectedVariant, setSelectedVariant] = useState<Product['variants'][number] | null>(null)
   const [selectedVariantProduct, setSelectedVariantProduct] = useState<Product | null>(null)
   const [editVariantName, setEditVariantName] = useState('')
@@ -308,7 +501,7 @@ export default function ProductsPage() {
     }
 
     try {
-      await apiFetch('products/create.php', {
+      const result = await apiFetch<{ success: boolean; id?: string; sku?: string }>('products/create.php', {
         method: 'POST',
         body: {
           creationType: newCreationType,
@@ -324,6 +517,20 @@ export default function ProductsPage() {
           variantPriceAdjustment: newCreationType === 'variant' ? (parseFloat(newVariantPriceAdjustment) || 0) : undefined,
         },
       })
+
+      // Upload images if any were selected and this is a base product
+      if (newCreationType === 'base' && newImages.length > 0 && result.id) {
+        const formData = new FormData()
+        formData.append('productId', result.id)
+        newImages.forEach((image, index) => {
+          formData.append('images[]', image)
+        })
+
+        await apiFetch('products/upload_images.php', {
+          method: 'POST',
+          body: formData,
+        })
+      }
 
       await reloadProducts()
       setIsAddOpen(false)
@@ -392,6 +599,7 @@ export default function ProductsPage() {
     setEditRetailPrice(product.retailPrice.toString())
     setEditCategory(product.categoryId)
     setEditIsActive(product.isActive)
+    setEditImages(product.images || [])
     setIsEditOpen(true)
   }
 
@@ -424,6 +632,20 @@ export default function ProductsPage() {
           isActive: editIsActive,
         },
       })
+
+      // Upload new images if any were selected
+      if (editNewImages.length > 0) {
+        const formData = new FormData()
+        formData.append('productId', selectedProduct.id)
+        editNewImages.forEach((image, index) => {
+          formData.append('images[]', image)
+        })
+
+        await apiFetch('products/upload_images.php', {
+          method: 'POST',
+          body: formData,
+        })
+      }
 
       await reloadProducts()
       setIsEditOpen(false)
@@ -496,6 +718,27 @@ export default function ProductsPage() {
       toast.success('Product deleted successfully')
     } catch (error) {
       const message = error instanceof Error ? error.message.replace('API request failed: ', '') : 'Failed to delete product'
+      toast.error(message)
+    }
+  }
+
+  const removeExistingImage = async (imageUrl: string) => {
+    if (!selectedProduct) return
+
+    try {
+      await apiFetch('products/delete_image.php', {
+        method: 'POST',
+        body: {
+          productId: selectedProduct.id,
+          imageUrl: imageUrl,
+        },
+      })
+
+      setEditImages(prev => prev.filter(img => img !== imageUrl))
+      await reloadProducts()
+      toast.success('Image deleted successfully')
+    } catch (error) {
+      const message = error instanceof Error ? error.message.replace('API request failed: ', '') : 'Failed to delete image'
       toast.error(message)
     }
   }
@@ -800,18 +1043,18 @@ export default function ProductsPage() {
         setIsAddOpen(open)
         if (!open) resetAddForm()
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
             <DialogDescription>
               Create a base product or register a new variant under an existing product
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-6 py-4">
             <div className="space-y-2">
               <Label>Type *</Label>
               <Select value={newCreationType} onValueChange={(value: 'base' | 'variant') => setNewCreationType(value)}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full sm:w-auto">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -823,7 +1066,7 @@ export default function ProductsPage() {
 
             {newCreationType === 'base' ? (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="newSku">SKU</Label>
                     <Input
@@ -868,7 +1111,7 @@ export default function ProductsPage() {
                     onChange={(e) => setNewDescription(e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="newCostPrice">Cost Price *</Label>
                     <Input
@@ -910,6 +1153,14 @@ export default function ProductsPage() {
                   />
                   <Label htmlFor="newIsActive">Active (available for sale)</Label>
                 </div>
+                <div className="space-y-2">
+                  <Label>Product Images</Label>
+                  <FileUpload
+                    onFilesSelected={(files) => {
+                      setNewImages(prev => [...prev, ...files])
+                    }}
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -937,7 +1188,7 @@ export default function ProductsPage() {
                     onChange={(e) => setNewVariantName(e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="newVariantSku">Variant SKU</Label>
                     <Input
@@ -969,14 +1220,14 @@ export default function ProductsPage() {
               </>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => {
               setIsAddOpen(false)
               resetAddForm()
-            }}>
+            }} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleAddProduct}>
+            <Button onClick={handleAddProduct} className="w-full sm:w-auto">
               {newCreationType === 'variant' ? 'Add Variant' : 'Add Product'}
             </Button>
           </DialogFooter>
@@ -991,7 +1242,7 @@ export default function ProductsPage() {
         }
         setIsViewOpen(true)
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Product Details</DialogTitle>
             <DialogDescription>
@@ -999,8 +1250,8 @@ export default function ProductsPage() {
             </DialogDescription>
           </DialogHeader>
           {selectedProduct && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground text-xs">SKU</Label>
                   <p className="font-mono">{selectedProduct.sku}</p>
@@ -1020,7 +1271,7 @@ export default function ProductsPage() {
                   <p className="text-sm">{selectedProduct.description}</p>
                 </div>
               )}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <Label className="text-muted-foreground text-xs">Cost Price</Label>
                   <p className="font-medium">{formatPeso(selectedProduct.costPrice)}</p>
@@ -1053,7 +1304,7 @@ export default function ProductsPage() {
               )}
               <div>
                 <Label className="text-muted-foreground text-xs">Base Product Stock Totals</Label>
-                <div className="mt-2 grid grid-cols-3 gap-3">
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div className="rounded-lg border p-3">
                     <p className="text-xs text-muted-foreground">Wholesale</p>
                     <p className="text-lg font-semibold tabular-nums">
@@ -1083,7 +1334,7 @@ export default function ProductsPage() {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-muted-foreground text-xs">Wholesale Reorder Level</Label>
                   <p className="font-medium">{selectedProductInventory?.wholesaleReorderLevel ?? 0}</p>
@@ -1105,6 +1356,21 @@ export default function ProductsPage() {
                   </Badge>
                 </div>
               </div>
+              {selectedProduct.images && selectedProduct.images.length > 0 && (
+                <div>
+                  <Label className="text-muted-foreground text-xs">Product Images</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-2">
+                    {selectedProduct.images.map((imageUrl, index) => (
+                      <img
+                        key={index}
+                        src={resolveAssetUrl(imageUrl)}
+                        alt={`Product image ${index + 1}`}
+                        className="w-full h-20 object-cover rounded border"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
@@ -1133,14 +1399,14 @@ export default function ProductsPage() {
 
       {/* Edit Product Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
             <DialogDescription>
               Update product information
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-6 py-4">
             <div className="space-y-2">
               <Label htmlFor="editName">Name</Label>
               <Input
@@ -1157,7 +1423,7 @@ export default function ProductsPage() {
                 onChange={(e) => setEditDescription(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="editCostPrice">Cost Price</Label>
                 <Input
@@ -1229,12 +1495,51 @@ export default function ProductsPage() {
                 </p>
               </div>
             )}
+            <div className="space-y-2">
+              <Label>Product Images</Label>
+              <div className="space-y-2">
+                {/* Existing Images */}
+                {editImages.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Current Images</Label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {editImages.map((imageUrl, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={resolveAssetUrl(imageUrl)}
+                            alt={`Product image ${index + 1}`}
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeExistingImage(imageUrl)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Images Upload */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">Add New Images</Label>
+                  <FileUpload
+                    onFilesSelected={(files) => {
+                      setEditNewImages(prev => [...prev, ...files])
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsEditOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit}>
+            <Button onClick={handleSaveEdit} className="w-full sm:w-auto">
               Save Changes
             </Button>
           </DialogFooter>
