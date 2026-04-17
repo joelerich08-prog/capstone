@@ -28,7 +28,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const syncCart = useCallback(async (updatedItems: CartItem[]) => {
     try {
-      await apiFetch('/api/cart/update.php', {
+      await apiFetch('cart/update.php', {
         method: 'POST',
         body: { items: updatedItems },
       })
@@ -41,7 +41,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const fetchCart = async () => {
       try {
         setIsLoading(true)
-        const data = await apiFetch<CartItem[]>('/api/cart/get.php')
+        const data = await apiFetch<CartItem[]>('cart/get.php')
         setItems(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Failed to load cart:', error)
@@ -125,7 +125,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([])
     setDiscountAmount(0)
-    void apiFetch('/api/cart/clear.php', { method: 'POST' }).catch(error => console.error('Failed to clear cart:', error))
+    void apiFetch('cart/clear.php', { method: 'POST' }).catch(error => console.error('Failed to clear cart:', error))
   }, [])
 
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0)

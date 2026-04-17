@@ -43,7 +43,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     const fetchOrders = async () => {
       try {
         setIsLoading(true)
-        const data = await apiFetch<Order[]>('/api/orders/get_all.php')
+        const data = await apiFetch<Order[]>('orders/get_all.php')
         const ordersWithDates = (data as any[]).map(order => ({
           ...order,
           createdAt: new Date(order.createdAt),
@@ -71,7 +71,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   const refreshOrders = useCallback(async () => {
     try {
-      const data = await apiFetch<Order[]>('/api/orders/get_all.php')
+      const data = await apiFetch<Order[]>('orders/get_all.php')
       const ordersWithDates = (data as any[]).map(order => ({
         ...order,
         createdAt: new Date(order.createdAt),
@@ -150,7 +150,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     recentOrderTimestamps.current.push(Date.now())
 
     try {
-      const newOrder = await apiFetch<Order>('/api/orders/create.php', {
+      const newOrder = await apiFetch<Order>('orders/create.php', {
         method: 'POST',
         body: {
           items: orderData.items,
@@ -178,7 +178,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   // Cancel an order — only allowed if status is 'pending'
   const updateOrderStatus = useCallback(async (orderId: string, status: OrderStatus): Promise<{ success: boolean; error?: string }> => {
     try {
-      await apiFetch('/api/orders/update_status.php', {
+      await apiFetch('orders/update_status.php', {
         method: 'POST',
         body: { orderId, status },
       })
@@ -193,7 +193,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
 
   const cancelOrder = useCallback(async (orderId: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      await apiFetch('/api/orders/update_status.php', {
+      await apiFetch('orders/update_status.php', {
         method: 'POST',
         body: { orderId, status: 'cancelled' },
       })

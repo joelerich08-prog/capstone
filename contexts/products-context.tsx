@@ -32,9 +32,9 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
         
         // Fetch all data in parallel
         const [productsData, categoriesData, suppliersData] = await Promise.all([
-          apiFetch<Product[]>('/api/products/get_all.php'),
-          apiFetch<Category[]>('/api/categories/get_all.php'),
-          apiFetch<Supplier[]>('/api/suppliers/get_all.php')
+          apiFetch<Product[]>('products/get_all.php'),
+          apiFetch<Category[]>('categories/get_all.php'),
+          apiFetch<Supplier[]>('suppliers/get_all.php')
         ])
         
         // Process products with dates
@@ -59,9 +59,9 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   const refreshProducts = useCallback(async () => {
     try {
       const [productsData, categoriesData, suppliersData] = await Promise.all([
-        apiFetch<Product[]>('/api/products/get_all.php'),
-        apiFetch<Category[]>('/api/categories/get_all.php'),
-        apiFetch<Supplier[]>('/api/suppliers/get_all.php')
+        apiFetch<Product[]>('products/get_all.php'),
+        apiFetch<Category[]>('categories/get_all.php'),
+        apiFetch<Supplier[]>('suppliers/get_all.php')
       ])
       
       const productsWithDates = (productsData as any[]).map(product => ({

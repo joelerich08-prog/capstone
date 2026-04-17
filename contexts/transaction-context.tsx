@@ -42,7 +42,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     const fetchTransactions = async () => {
       try {
         setIsLoading(true)
-        const data = await apiFetch<Transaction[]>('/api/transactions/get_history.php')
+        const data = await apiFetch<Transaction[]>('transactions/get_history.php')
         const transactionsWithDates = (data as any[]).map(tx => ({
           ...tx,
           createdAt: new Date(tx.createdAt),
@@ -64,7 +64,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
   const refreshTransactions = useCallback(async () => {
     try {
-      const data = await apiFetch<Transaction[]>('/api/transactions/get_history.php')
+      const data = await apiFetch<Transaction[]>('transactions/get_history.php')
       const transactionsWithDates = (data as any[]).map(tx => ({
         ...tx,
         createdAt: new Date(tx.createdAt),
@@ -144,7 +144,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const result = await apiFetch('/api/pos/checkout.php', {
+      const result = await apiFetch('pos/checkout.php', {
         method: 'POST',
         body: {
           status: 'completed',
@@ -174,7 +174,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      await apiFetch('/api/transactions/refund.php', {
+      await apiFetch('transactions/refund.php', {
         method: 'POST',
         body: {
           transactionId,

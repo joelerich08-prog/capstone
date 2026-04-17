@@ -24,7 +24,7 @@ export function SuppliersProvider({ children }: { children: ReactNode }) {
     const fetchSuppliers = async () => {
       try {
         setIsLoading(true)
-        const data = await apiFetch<Supplier[]>('/api/suppliers/get_all.php')
+        const data = await apiFetch<Supplier[]>('suppliers/get_all.php')
         setSuppliers(data)
       } catch (error) {
         console.error('Failed to load suppliers:', error)
@@ -39,7 +39,7 @@ export function SuppliersProvider({ children }: { children: ReactNode }) {
   const refreshSuppliers = useCallback(async () => {
     try {
       setIsLoading(true)
-      const data = await apiFetch<Supplier[]>('/api/suppliers/get_all.php')
+      const data = await apiFetch<Supplier[]>('suppliers/get_all.php')
       setSuppliers(data)
     } catch (error) {
       console.error('Failed to refresh suppliers:', error)

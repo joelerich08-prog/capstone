@@ -50,7 +50,7 @@ export function ActivityLogsProvider({ children }: { children: ReactNode }) {
     const fetchLogs = async () => {
       try {
         setIsLoading(true)
-        const data = await apiFetch<ActivityLogEntry[]>('/api/activity-logs/get_all.php')
+        const data = await apiFetch<ActivityLogEntry[]>('activity-logs/get_all.php')
         const logsWithDates = (data as any[]).map(log => ({
           ...log,
           timestamp: new Date(log.timestamp),
@@ -73,7 +73,7 @@ export function ActivityLogsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const data = await apiFetch<ActivityLogEntry[]>('/api/activity-logs/get_all.php')
+      const data = await apiFetch<ActivityLogEntry[]>('activity-logs/get_all.php')
       const logsWithDates = (data as any[]).map(log => ({
         ...log,
         timestamp: new Date(log.timestamp),

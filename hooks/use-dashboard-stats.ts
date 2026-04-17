@@ -21,7 +21,7 @@ export function useDashboardStats() {
     try {
       setIsLoading(true)
       setError(null)
-      const data = await apiFetch<DashboardSummaryStats>('/api/reports/dashboard_summary.php')
+      const data = await apiFetch<DashboardSummaryStats>('reports/dashboard_summary.php')
       setStats({
         todaySales: data.todaySales ?? 0,
         todayProfit: data.todayProfit ?? 0,

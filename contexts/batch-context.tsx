@@ -114,7 +114,7 @@ export function BatchProvider({ children }: { children: ReactNode }) {
   const refreshBatches = useCallback(async () => {
     try {
       setIsLoading(true)
-      const data = await apiFetch<ProductBatch[]>('/api/batches/get_all.php')
+      const data = await apiFetch<ProductBatch[]>('batches/get_all.php')
       const batchesWithDates = (data as any[]).map(batch => ({
         ...batch,
         expirationDate: new Date(batch.expirationDate),
@@ -277,7 +277,7 @@ export function BatchProvider({ children }: { children: ReactNode }) {
   // Add a new batch
   const addBatch = useCallback(async (batchData: Omit<ProductBatch, 'id' | 'status'>) => {
     try {
-      const data = await apiFetch<{ batch: ProductBatch }>('/api/batches/create.php', {
+      const data = await apiFetch<{ batch: ProductBatch }>('batches/create.php', {
         method: 'POST',
         body: batchData,
       })
@@ -298,7 +298,7 @@ export function BatchProvider({ children }: { children: ReactNode }) {
   // Update batch stock
   const updateBatchStock = useCallback(async (batchId: string, tier: InventoryTier, quantityChange: number) => {
     try {
-      const data = await apiFetch<{ newQty: number }>('/api/batches/update_stock.php', {
+      const data = await apiFetch<{ newQty: number }>('batches/update_stock.php', {
         method: 'POST',
         body: { batchId, tier, quantityChange },
       })
@@ -339,7 +339,7 @@ export function BatchProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      await apiFetch('/api/batches/dispose.php', {
+      await apiFetch('batches/dispose.php', {
         method: 'POST',
         body: { batchId, reason },
       })

@@ -363,7 +363,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
     const fetchSettings = async () => {
       try {
-        const apiSettings = await apiFetch<Partial<AppSettings>>('/api/settings/get_config.php')
+        const apiSettings = await apiFetch<Partial<AppSettings>>('settings/get_config.php')
         const stored = readStoredSettings()
 
         // API remains the source of truth for store, POS, and printer data.
@@ -441,7 +441,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
     try {
       setIsSaving(true)
-      await apiFetch('/api/settings/update_settings.php', {
+      await apiFetch('settings/update_settings.php', {
         method: 'POST',
         body: payload,
       })

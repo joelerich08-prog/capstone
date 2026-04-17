@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const data = await apiFetch<AuthResponse>('/api/auth/me.php')
+        const data = await apiFetch<AuthResponse>('auth/me.php')
         const userData: User = {
           ...data,
           createdAt: new Date(data.createdAt),
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string) => {
       setIsLoading(true)
       try {
-        const data = await apiFetch<AuthResponse>('/api/auth/login.php', {
+        const data = await apiFetch<AuthResponse>('auth/login.php', {
           method: 'POST',
           body: { email, password },
         })
@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (data: RegisterUserData) => {
       setIsLoading(true)
       try {
-        const responseData = await apiFetch<AuthResponse>('/api/auth/register.php', {
+        const responseData = await apiFetch<AuthResponse>('auth/register.php', {
           method: 'POST',
           body: { role: 'customer', ...data } as Record<string, unknown>,
         })
@@ -156,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await apiFetch('/api/auth/logout.php', { method: 'POST' })
+      await apiFetch('auth/logout.php', { method: 'POST' })
     } catch (error) {
       console.error('Logout request failed:', error)
     }

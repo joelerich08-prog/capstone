@@ -25,7 +25,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
     const fetchCategories = async () => {
       try {
         setIsLoading(true)
-        const data = await apiFetch<Category[]>('/api/categories/get_all.php')
+        const data = await apiFetch<Category[]>('categories/get_all.php')
         setCategories(data)
       } catch (error) {
         console.error('Failed to load categories:', error)
@@ -40,7 +40,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   const refreshCategories = useCallback(async () => {
     try {
       setIsLoading(true)
-      const data = await apiFetch<Category[]>('/api/categories/get_all.php')
+      const data = await apiFetch<Category[]>('categories/get_all.php')
       setCategories(data)
     } catch (error) {
       console.error('Failed to refresh categories:', error)

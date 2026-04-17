@@ -154,7 +154,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     const fetchInventory = async () => {
       try {
         setIsLoading(true)
-        const data = await apiFetch<InventoryLevel[]>('/api/inventory/get_levels.php')
+        const data = await apiFetch<InventoryLevel[]>('inventory/get_levels.php')
         const inventoryWithDates = (data as any[]).map(inv => ({
           ...inv,
           updatedAt: new Date(inv.updatedAt),
@@ -182,7 +182,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
   const refreshInventory = useCallback(async () => {
     try {
-      const data = await apiFetch<InventoryLevel[]>('/api/inventory/get_levels.php')
+      const data = await apiFetch<InventoryLevel[]>('inventory/get_levels.php')
       const inventoryWithDates = (data as any[]).map(inv => ({
         ...inv,
         updatedAt: new Date(inv.updatedAt),
@@ -245,7 +245,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     variantId?: string
   ) => {
     try {
-      await apiFetch('/api/inventory/transfer.php', {
+      await apiFetch('inventory/transfer.php', {
         method: 'POST',
         body: {
           productId,
@@ -296,7 +296,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     variantId?: string
   ) => {
     try {
-      const data = await apiFetch<{ retailQtyAdded: number }>('/api/inventory/breakdown.php', {
+      const data = await apiFetch<{ retailQtyAdded: number }>('inventory/breakdown.php', {
         method: 'POST',
         body: {
           productId,
@@ -370,7 +370,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
       const trimmedNotes = notes.trim()
 
-      await apiFetch('/api/inventory/receive_stock.php', {
+      await apiFetch('inventory/receive_stock.php', {
         method: 'POST',
         body: {
           items,
@@ -425,7 +425,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         return { success: false, error: 'Quantity change cannot be zero' }
       }
 
-      await apiFetch('/api/inventory/adjust_stock.php', {
+      await apiFetch('inventory/adjust_stock.php', {
         method: 'POST',
         body: {
           productId,
@@ -483,7 +483,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         return { success: false, error: 'Conversion values must be greater than zero' }
       }
 
-      await apiFetch('/api/inventory/update_conversion.php', {
+      await apiFetch('inventory/update_conversion.php', {
         method: 'POST',
         body: {
           productId,
@@ -527,7 +527,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     shelfRestockLevel: number,
   ) => {
     try {
-      await apiFetch('/api/inventory/update_reorder_level.php', {
+      await apiFetch('inventory/update_reorder_level.php', {
         method: 'POST',
         body: {
           productId,

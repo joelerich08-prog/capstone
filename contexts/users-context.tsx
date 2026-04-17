@@ -43,7 +43,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     const fetchUsers = async () => {
       try {
         setIsLoading(true)
-        const data = await apiFetch<ExtendedUser[]>('/api/users/get_all.php')
+        const data = await apiFetch<ExtendedUser[]>('users/get_all.php')
         const usersWithDates = (data as any[]).map(user => ({
           ...user,
           createdAt: new Date(user.createdAt),
@@ -67,7 +67,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const data = await apiFetch<ExtendedUser[]>('/api/users/get_all.php')
+      const data = await apiFetch<ExtendedUser[]>('users/get_all.php')
       const usersWithDates = (data as any[]).map(user => ({
         ...user,
         createdAt: new Date(user.createdAt),
