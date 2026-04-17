@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { DashboardShell } from '@/components/layout/dashboard-shell'
+import { StockmanShell } from '@/components/layout/stockman-shell'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -221,10 +221,9 @@ export default function ExpiryManagementPage() {
   const selectedProduct = selectedBatch ? products.find(p => p.id === selectedBatch.productId) : null
 
   return (
-    <DashboardShell
+    <StockmanShell
       title="Expiry Management"
       description="Track and manage product batches and expiration dates"
-      allowedRoles={['stockman', 'admin']}
     >
       {/* Summary Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -642,6 +641,6 @@ export default function ExpiryManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </StockmanShell>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { StockmanShell } from '@/components/layout/stockman-shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +13,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
@@ -32,7 +38,7 @@ import type { Product } from '@/lib/types'
 import { useProducts } from '@/contexts/products-context'
 import { useInventory } from '@/contexts/inventory-context'
 import { formatPeso } from '@/lib/utils/currency'
-import { Search, Package, Eye, Boxes, PackageOpen } from 'lucide-react'
+import { Search, Package, Eye, Boxes, PackageOpen, ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react'
 import { usePagination } from '@/hooks/use-pagination'
 import { TablePagination } from '@/components/shared/table-pagination'
 
@@ -43,6 +49,7 @@ export default function StockmanProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isViewOpen, setIsViewOpen] = useState(false)
+  const [expandedProducts, setExpandedProducts] = useState<Record<string, boolean>>({})
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -56,6 +63,13 @@ export default function StockmanProductsPage() {
   const handleViewProduct = (product: Product) => {
     setSelectedProduct(product)
     setIsViewOpen(true)
+  }
+
+  const toggleProductVariants = (productId: string) => {
+    setExpandedProducts(prev => ({
+      ...prev,
+      [productId]: !prev[productId],
+    }))
   }
 
   const getProductInventory = (productId: string) => {
@@ -101,100 +115,139 @@ export default function StockmanProductsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>SKU</TableHead>
-                <TableHead>Product Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Variants</TableHead>
+                <TableHead>Product</TableHead>
                 <TableHead className="text-right">Cost</TableHead>
-                <TableHead className="text-right">Wholesale</TableHead>
-                <TableHead className="text-right">Retail</TableHead>
-                <TableHead className="text-right">Wholesale Stock</TableHead>
-                <TableHead className="text-right">Retail Stock</TableHead>
-                <TableHead className="text-right">Shelf Stock</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Wholesale Price</TableHead>
+                <TableHead className="text-right">Retail Price</TableHead>
+                <TableHead>Availability</TableHead>
                 <TableHead className="w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pagination.paginatedItems.map(product => {
-                const inventory = getProductInventory(product.id)
-
+              {filteredProducts.map(product => {
                 return (
-                  <TableRow key={product.id}>
-                    <TableCell className="font-mono text-sm">{product.sku}</TableCell>
-                    <TableCell>
-                      <div className="font-medium">{product.name}</div>
-                      {product.description && (
-                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                          {product.description}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>{categories.find(c => c.id === product.categoryId)?.name || 'Unknown'}</TableCell>
-                    <TableCell>
-                      {product.variants.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {product.variants.slice(0, 2).map(v => (
-                            <Badge key={v.id} variant="outline" className="text-xs">
-                              {v.name}
-                            </Badge>
-                          ))}
-                          {product.variants.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{product.variants.length - 2}
-                            </Badge>
+                  <Fragment key={product.id}>
+                    <TableRow>
+                      <TableCell className="font-mono text-sm">{product.sku}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {product.variants.length > 0 ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              onClick={() => toggleProductVariants(product.id)}
+                              title={expandedProducts[product.id] ? 'Hide variants' : 'Show variants'}
+                            >
+                              {expandedProducts[product.id] ? (
+                                <ChevronDown className="size-4" />
+                              ) : (
+                                <ChevronRight className="size-4" />
+                              )}
+                            </Button>
+                          ) : (
+                            <span className="flex items-center">
+                              <Package className="size-4 text-muted-foreground" />
+                            </span>
                           )}
+                          <div>
+                            <div className="font-medium">{product.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {getCategoryName(product.categoryId)}
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatPeso(product.costPrice)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatPeso(product.wholesalePrice)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
-                      {formatPeso(product.retailPrice)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {inventory?.wholesaleQty ?? 0}
-                      <span className="text-xs text-muted-foreground ml-1">
-                        {inventory?.wholesaleUnit ?? ''}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {inventory?.retailQty ?? 0}
-                      <span className="text-xs text-muted-foreground ml-1">
-                        {inventory?.retailUnit ?? ''}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {inventory?.shelfQty ?? 0}
-                      <span className="text-xs text-muted-foreground ml-1">
-                        {inventory?.shelfUnit ?? ''}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {product.isActive ? (
-                        <Badge className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
-                          Active
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">Inactive</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="size-8"
-                        onClick={() => handleViewProduct(product)}
-                      >
-                        <Eye className="size-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatPeso(product.costPrice)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {formatPeso(product.wholesalePrice)}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums font-medium">
+                        {formatPeso(product.retailPrice)}
+                      </TableCell>
+                      <TableCell>
+                        {product.isActive ? (
+                          <Badge className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewProduct(product)}>
+                              <Eye className="size-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+
+                    {expandedProducts[product.id] && product.variants.map((variant) => {
+                      const variantWholesalePrice = product.wholesalePrice + variant.priceAdjustment
+                      const variantRetailPrice = product.retailPrice + variant.priceAdjustment
+
+                      return (
+                        <TableRow key={variant.id} className="bg-muted/20">
+                          <TableCell className="font-mono text-sm text-muted-foreground">
+                            {variant.sku || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="ml-9 flex items-center">
+                                <Package className="size-4 text-muted-foreground opacity-60" />
+                              </span>
+                              <div>
+                                <div className="text-sm font-medium">{variant.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Variant of {product.name}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatPeso(product.costPrice)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatPeso(variantWholesalePrice)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums font-medium">
+                            {formatPeso(variantRetailPrice)}
+                          </TableCell>
+                          <TableCell>
+                            {product.isActive ? (
+                              <Badge className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+                                Active
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              onClick={() => handleViewProduct(product)}
+                            >
+                              <Eye className="size-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </Fragment>
                 )
               })}
             </TableBody>
@@ -230,7 +283,7 @@ export default function StockmanProductsPage() {
               {selectedProduct?.name}
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedProduct && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">

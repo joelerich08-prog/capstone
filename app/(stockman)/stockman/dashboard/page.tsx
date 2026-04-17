@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { StockmanShell } from "@/components/layout/stockman-shell"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,22 +21,44 @@ const activityColors: Record<string, string> = {
 }
 
 export default function StockmanDashboardPage() {
-  const { products } = useProducts()
-  const { inventoryLevels, activityLog } = useInventory()
+  const { products, isLoading: productsLoading } = useProducts()
+  const { inventoryLevels, activityLog, isLoading: inventoryLoading } = useInventory()
 
-  // Calculate low stock items based on actual inventory
-  const lowStockItems = products.filter(p => {
-    const inventory = inventoryLevels.find(inv => inv.productId === p.id)
-    const storeStock = inventory?.shelfQty || 0
-    const restockLevel = inventory?.shelfRestockLevel || 20
-    return storeStock < restockLevel
-  }).slice(0, 5)
+  const inventoryByProduct = useMemo(() => {
+    return products.map((product) => {
+      const matchingLevels = inventoryLevels.filter((inv) => inv.productId === product.id)
+      const totalShelf = matchingLevels.reduce((sum, inv) => sum + inv.shelfQty, 0)
+      const restockLevel = matchingLevels.reduce((max, inv) => Math.max(max, inv.shelfRestockLevel || 0), 20)
+      const lowestShelf = matchingLevels.length > 0 ? Math.min(...matchingLevels.map((inv) => inv.shelfQty)) : 0
+      const hasLowShelf = matchingLevels.some((inv) => inv.shelfQty <= inv.shelfRestockLevel)
 
-  const criticalItems = lowStockItems.filter(p => {
-    const inventory = inventoryLevels.find(inv => inv.productId === p.id)
-    const storeStock = inventory?.shelfQty || 0
-    return storeStock < 5
-  }).length
+      return {
+        product,
+        totalShelf,
+        restockLevel,
+        lowestShelf,
+        hasLowShelf,
+      }
+    })
+  }, [products, inventoryLevels])
+
+  const isLoading = productsLoading || inventoryLoading
+  if (isLoading) {
+    return (
+      <StockmanShell title="Stockman Dashboard" description="Manage inventory and stock operations">
+        <div className="flex h-[60vh] items-center justify-center rounded-lg border border-muted p-8 text-sm text-muted-foreground">
+          Loading stockman dashboard...
+        </div>
+      </StockmanShell>
+    )
+  }
+
+  const lowStockItems = inventoryByProduct
+    .filter((item) => item.hasLowShelf)
+    .map((item) => item.product)
+    .slice(0, 5)
+
+  const criticalItems = inventoryByProduct.filter((item) => item.lowestShelf < 5).length
 
   // Calculate totals from actual inventory
   const totalWholesale = inventoryLevels.reduce((acc, inv) => acc + inv.wholesaleQty, 0)
@@ -170,9 +193,9 @@ export default function StockmanDashboardPage() {
             <CardContent>
               <div className="space-y-3">
                 {lowStockItems.map((product) => {
-                  const inventory = inventoryLevels.find(inv => inv.productId === product.id)
-                  const storeStock = inventory?.shelfQty || 0
-                  const restockLevel = inventory?.shelfRestockLevel || 20
+                  const productInventory = inventoryByProduct.find((item) => item.product.id === product.id)
+                  const storeStock = productInventory?.lowestShelf || 0
+                  const restockLevel = productInventory?.restockLevel || 20
                   const maxStock = restockLevel * 2
                   const percentage = (storeStock / maxStock) * 100
                   const isCritical = storeStock < 5

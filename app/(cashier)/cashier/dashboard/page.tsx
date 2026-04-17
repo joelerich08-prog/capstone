@@ -8,11 +8,20 @@ import { Badge } from "@/components/ui/badge"
 
 import { StatCard } from "@/components/shared/stat-card"
 import { formatCurrency } from "@/lib/utils/currency"
-import { Calculator, Receipt, TrendingUp, ChevronRight, CreditCard, Banknote, Smartphone, ClipboardList } from "lucide-react"
+import { Calculator, Receipt, TrendingUp, ChevronRight, ClipboardList, Clock, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { useTransactions } from "@/contexts/transaction-context"
 import { useOrders } from "@/contexts/order-context"
+import type { OrderStatus } from "@/lib/types"
+
+const orderStatusConfig: Record<OrderStatus, { label: string; color: string; icon: React.ElementType }> = {
+  pending: { label: 'Pending', color: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400', icon: AlertCircle },
+  preparing: { label: 'Preparing', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400', icon: Clock },
+  ready: { label: 'Ready', color: 'bg-green-500/10 text-green-600 dark:text-green-400', icon: ClipboardList },
+  completed: { label: 'Completed', color: 'bg-muted text-muted-foreground', icon: Receipt },
+  cancelled: { label: 'Cancelled', color: 'bg-destructive/10 text-destructive', icon: AlertCircle },
+}
 
 export default function CashierDashboardPage() {
   const { user } = useAuth()
@@ -41,10 +50,34 @@ export default function CashierDashboardPage() {
     return orders.filter(o => o.status === 'pending' || o.status === 'preparing').length
   }, [isClient, orders])
 
-  const paymentSummary = [
-    { method: "Cash", icon: Banknote, amount: todayData.cash, color: "text-green-500 bg-green-500/10" },
-    { method: "GCash", icon: Smartphone, amount: todayData.gcash, color: "text-blue-500 bg-blue-500/10" },
-  ]
+  // Get recent orders from context
+  const recentOrders = useMemo(() => {
+    if (!isClient) return []
+    return orders.slice(0, 5).map(order => {
+      const now = new Date()
+      const orderDate = new Date(order.createdAt)
+      const diffMs = now.getTime() - orderDate.getTime()
+      const diffMins = Math.floor(diffMs / 60000)
+      const diffHours = Math.floor(diffMs / 3600000)
+      
+      let timeAgo = ''
+      if (diffMins < 1) timeAgo = 'Just now'
+      else if (diffMins < 60) timeAgo = `${diffMins} min ago`
+      else if (diffHours < 24) timeAgo = `${diffHours} hr${diffHours > 1 ? 's' : ''} ago`
+      else timeAgo = orderDate.toLocaleDateString()
+      
+      const statusConfig = orderStatusConfig[order.status]
+      return {
+        orderNo: order.orderNo,
+        customerName: order.customerName,
+        total: order.total,
+        status: order.status,
+        statusLabel: statusConfig.label,
+        statusColor: statusConfig.color,
+        time: timeAgo,
+      }
+    })
+  }, [isClient, orders])
 
   // Get recent transactions from context
   const recentTransactions = useMemo(() => {
@@ -148,22 +181,39 @@ export default function CashierDashboardPage() {
         </Card>
 
         <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Payment Methods</CardTitle>
-            <CardDescription>Breakdown by payment type</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Orders</CardTitle>
+              <CardDescription>Recent online orders</CardDescription>
+            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/cashier/orders">View All</Link>
+            </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {paymentSummary.map((payment) => (
-              <div key={payment.method} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${payment.color}`}>
-                    <payment.icon className="h-5 w-5" />
+          <CardContent>
+            {recentOrders.length > 0 ? (
+              <div className="space-y-3">
+                {recentOrders.map((order) => (
+                  <div key={order.orderNo} className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm truncate">{order.orderNo}</p>
+                        <Badge className={`text-xs whitespace-nowrap ${order.statusColor}`}>
+                          {order.statusLabel}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{order.customerName} • {order.time}</p>
+                    </div>
+                    <span className="font-semibold text-sm tabular-nums whitespace-nowrap ml-2">{formatCurrency(order.total)}</span>
                   </div>
-                  <span className="font-medium">{payment.method}</span>
-                </div>
-                <span className="text-lg font-semibold">{formatCurrency(payment.amount)}</span>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                <ClipboardList className="size-8 mb-2 opacity-50" />
+                <p className="text-sm">No orders yet</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
