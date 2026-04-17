@@ -1,4 +1,4 @@
-import type { UserRole, NavItem } from '@/lib/types'
+import type { UserRole, NavItem, RolePermissions } from '@/lib/types'
 
 // Role-based navigation configuration
 export const roleNavigations: Record<UserRole, NavItem[]> = {
@@ -50,14 +50,13 @@ export const roleNavigations: Record<UserRole, NavItem[]> = {
       icon: 'Settings',
       children: [
         { title: 'General', href: '/admin/settings' },
-        { title: 'Access Control', href: '/admin/settings/access-control' },
         { title: 'Activity Log', href: '/admin/settings/activity-log' },
-        { title: 'Printers', href: '/admin/settings/printers' },
       ],
     },
   ],
   stockman: [
     { title: 'Dashboard', href: '/stockman/dashboard', icon: 'LayoutDashboard' },
+    { title: 'POS', href: '/stockman/pos', icon: 'ShoppingCart' },
     {
       title: 'Inventory',
       href: '/stockman/stock-levels',
@@ -82,18 +81,69 @@ export const roleNavigations: Record<UserRole, NavItem[]> = {
       ],
     },
     { title: 'Suppliers', href: '/stockman/suppliers', icon: 'Truck' },
+    { title: 'Reports', href: '/admin/reports', icon: 'BarChart3' },
+    { title: 'Settings', href: '/admin/settings', icon: 'Settings' },
+    { title: 'Users', href: '/admin/users', icon: 'Users' },
   ],
   cashier: [
     { title: 'Dashboard', href: '/cashier/dashboard', icon: 'LayoutDashboard' },
     { title: 'POS', href: '/cashier/pos', icon: 'ShoppingCart' },
-    { title: 'Transactions', href: '/cashier/transactions', icon: 'ClipboardList' },
-    { title: 'History', href: '/cashier/history', icon: 'History' },
+    { title: 'Orders', href: '/cashier/orders', icon: 'ClipboardList' },
+    { title: 'Transactions', href: '/cashier/transactions', icon: 'Receipt' },
+    { title: 'Suppliers', href: '/admin/inventory/suppliers', icon: 'Truck' },
+    { title: 'Reports', href: '/admin/reports', icon: 'BarChart3' },
+    { title: 'Settings', href: '/admin/settings', icon: 'Settings' },
+    { title: 'Users', href: '/admin/users', icon: 'Users' },
   ],
 }
 
 // Get navigation items for a specific role
-export function getNavigation(role: UserRole): NavItem[] {
-  return roleNavigations[role] || []
+export function getNavigation(role: UserRole, permissions?: RolePermissions | null): NavItem[] {
+  const baseNavigation = roleNavigations[role] || []
+  
+  if (!permissions) {
+    return baseNavigation
+  }
+
+  // Filter navigation items based on permissions
+  const filterNavigation = (items: NavItem[]): NavItem[] => {
+    return items.filter(item => {
+      // Check if the item has a corresponding module permission
+      const moduleKey = getModuleKeyFromHref(item.href)
+      if (moduleKey && permissions[moduleKey]) {
+        // For main navigation items, require view permission
+        return permissions[moduleKey].view
+      }
+      
+      // For items without direct module mapping, keep them if their parent is accessible
+      // This handles sub-items that don't have direct permission mappings
+      return true
+    }).map(item => ({
+      ...item,
+      children: item.children ? filterNavigation(item.children) : undefined
+    })).filter(item => {
+      // Remove items that have no children after filtering (for parent items)
+      if (item.children && item.children.length === 0) {
+        return false
+      }
+      return true
+    })
+  }
+
+  return filterNavigation(baseNavigation)
+}
+
+// Helper function to map href to module key
+function getModuleKeyFromHref(href: string): keyof RolePermissions | null {
+  if (href.includes('/pos')) return 'pos'
+  if (href.includes('/inventory') || href.includes('/stock-levels') || href.includes('/products') || href.includes('/categories')) return 'inventory'
+  if (href.includes('/suppliers')) return 'suppliers'
+  if (href.includes('/reports') || href.includes('/analytics')) return 'reports'
+  if (href.includes('/users')) return 'users'
+  if (href.includes('/settings')) return 'settings'
+  if (href.includes('/dashboard')) return 'dashboard'
+  
+  return null
 }
 
 // Get the default redirect path for a role after login

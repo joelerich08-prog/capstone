@@ -139,6 +139,17 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([])
 
+  const normalizeActivityType = (action: string): ActivityLogEntry['type'] => {
+    switch (action) {
+      case 'receive_stock':
+        return 'receiving'
+      case 'adjust_stock':
+        return 'adjustment'
+      default:
+        return action as ActivityLogEntry['type']
+    }
+  }
+
   // Fetch inventory levels from API on mount
   const { toast } = useToast()
   const { user, isLoading: isAuthLoading } = useAuth()
@@ -168,10 +179,10 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         try {
           const activityData = await apiFetch<any[]>('activity-logs/get_all.php')
           const mappedActivityLog: ActivityLogEntry[] = activityData
-            .filter(log => ['transfer', 'breakdown', 'receiving', 'adjustment'].includes(log.action))
+            .filter(log => ['transfer', 'breakdown', 'receive_stock', 'adjust_stock'].includes(log.action))
             .map(log => ({
               id: log.id,
-              type: log.action as ActivityLogEntry['type'],
+              type: normalizeActivityType(log.action),
               description: log.details,
               details: `User: ${log.userName}`,
               user: log.userName,
@@ -225,10 +236,10 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     try {
       const activityData = await apiFetch<any[]>('activity-logs/get_all.php')
       const mappedActivityLog: ActivityLogEntry[] = activityData
-        .filter(log => ['transfer', 'breakdown', 'receiving', 'adjustment'].includes(log.action))
+        .filter(log => ['transfer', 'breakdown', 'receive_stock', 'adjust_stock'].includes(log.action))
         .map(log => ({
           id: log.id,
-          type: log.action as ActivityLogEntry['type'],
+          type: normalizeActivityType(log.action),
           description: log.details,
           details: `User: ${log.userName}`,
           user: log.userName,

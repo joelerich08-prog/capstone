@@ -16,7 +16,6 @@ interface OrderContextType {
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<{ success: boolean; error?: string }>
   getOrdersByStatus: (status: OrderStatus) => Order[]
   getPendingOrdersCount: () => number
-  getOrdersForUser: (userId: string) => Order[]
   lookupOrder: (orderNo: string, phone: string) => Order | null
   validateOrder: (order: Omit<Order, 'id' | 'orderNo' | 'createdAt'>) => { valid: boolean; error?: string }
 }
@@ -220,11 +219,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     ).length
   }, [orders])
 
-  // Get orders for a specific logged-in user
-  const getOrdersForUser = useCallback((userId: string) => {
-    return orders.filter(order => order.userId === userId)
-  }, [orders])
-
   // Lookup order by order number and phone for guests
   const lookupOrder = useCallback((orderNo: string, phone: string): Order | null => {
     const cleanPhone = phone.replace(/[\s-]/g, '')
@@ -254,7 +248,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       updateOrderStatus,
       getOrdersByStatus,
       getPendingOrdersCount,
-      getOrdersForUser,
       lookupOrder,
       validateOrder,
     }}>

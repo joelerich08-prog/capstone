@@ -100,7 +100,6 @@ export interface Transaction {
   total: number
   paymentType: PaymentType
   cashierId: string
-  customerId?: string
   status: TransactionStatus
   createdAt: Date
 }
@@ -142,7 +141,6 @@ export interface Order {
   id: string
   orderNo: string
   source: OrderSource
-  userId?: string // For logged-in users
   customerName: string
   customerPhone: string
   items: OrderItem[]
@@ -220,6 +218,7 @@ export interface CartItem {
   unitPrice: number
   subtotal: number
   unitType?: PurchaseUnitType  // 'piece' for shelf, 'pack' for retail, 'box' for wholesale
+  tier?: InventoryTier
   unitLabel?: string  // Display label like "box", "pack", "piece"
 }
 

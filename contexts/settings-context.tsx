@@ -37,18 +37,8 @@ export interface POSSettings {
   quickAddMode: boolean
   showProductImages: boolean
   autoPrintReceipt: boolean
-  requireCustomerInfo: boolean
   enableCashPayment: boolean
   enableGCashPayment: boolean
-}
-
-export interface SecuritySettings {
-  twoFactorEnabled: boolean
-  sessionTimeout: number // minutes
-  maxLoginAttempts: number
-  autoBackup: boolean
-  backupFrequency: 'daily' | 'weekly' | 'monthly'
-  dataRetentionDays: number
 }
 
 export interface PrinterDevice {
@@ -99,7 +89,6 @@ export interface AppSettings {
   store: StoreSettings
   notifications: NotificationSettings
   pos: POSSettings
-  security: SecuritySettings
   printers: PrinterDevice[]
   printSettings: PrintSettings
   permissions: AccessPermissions
@@ -136,18 +125,8 @@ const defaultPOSSettings: POSSettings = {
   quickAddMode: true,
   showProductImages: true,
   autoPrintReceipt: false,
-  requireCustomerInfo: false,
   enableCashPayment: true,
   enableGCashPayment: true,
-}
-
-const defaultSecuritySettings: SecuritySettings = {
-  twoFactorEnabled: false,
-  sessionTimeout: 30,
-  maxLoginAttempts: 5,
-  autoBackup: true,
-  backupFrequency: 'daily',
-  dataRetentionDays: 365,
 }
 
 const defaultPrintSettings: PrintSettings = {
@@ -219,7 +198,7 @@ const defaultPermissions: AccessPermissions = {
     dashboard: viewOnly,
     pos: defaultModulePermission,
     inventory: viewCreateEdit,
-    products: viewCreate,
+    products: viewCreateEdit,
     suppliers: viewOnly,
     reports: viewOnly,
     users: defaultModulePermission,
@@ -244,7 +223,6 @@ const defaultSettings: AppSettings = {
   store: defaultStoreSettings,
   notifications: defaultNotificationSettings,
   pos: defaultPOSSettings,
-  security: defaultSecuritySettings,
   printers: defaultPrinters,
   printSettings: defaultPrintSettings,
   permissions: defaultPermissions,
@@ -302,9 +280,6 @@ interface SettingsContextType {
   // POS settings
   updatePOSSettings: (updates: Partial<POSSettings>) => void
   
-  // Security settings
-  updateSecuritySettings: (updates: Partial<SecuritySettings>) => void
-  
   // Print settings
   updatePrintSettings: (updates: Partial<PrintSettings>) => void
   
@@ -318,7 +293,7 @@ interface SettingsContextType {
   // Permission management
   togglePermission: (role: UserRole, module: keyof RolePermissions, action: keyof ModulePermission) => void
   toggleAllModulePermissions: (role: UserRole, module: keyof RolePermissions, enabled: boolean) => void
-  resetPermissionsToDefaults: () => void
+  resetPermissionsToDefaults: () => AppSettings
   
   // Save/Reset
   updateSettings: (updates: Partial<AppSettings>) => Promise<boolean>
@@ -344,15 +319,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         store: storedSettings.store ? { ...prev.store, ...storedSettings.store } : prev.store,
         notifications: storedSettings.notifications ? { ...prev.notifications, ...storedSettings.notifications } : prev.notifications,
         pos: storedSettings.pos ? { ...prev.pos, ...storedSettings.pos } : prev.pos,
-        security: storedSettings.security ? { ...prev.security, ...storedSettings.security } : prev.security,
         printSettings: storedSettings.printSettings ? { ...prev.printSettings, ...storedSettings.printSettings } : prev.printSettings,
         permissions: storedSettings.permissions ? { ...prev.permissions, ...storedSettings.permissions } : prev.permissions,
         printers: storedSettings.printers ?? prev.printers,
       }))
-    }
-
-    if (isAuthLoading) {
-      return
     }
 
     if (!user) {
@@ -375,7 +345,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           store: { ...defaultSettings.store, ...stored?.store, ...apiSettings.store },
           notifications: { ...defaultSettings.notifications, ...stored?.notifications, ...apiSettings.notifications },
           pos: { ...defaultSettings.pos, ...stored?.pos, ...apiSettings.pos },
-          security: { ...defaultSettings.security, ...stored?.security, ...apiSettings.security },
           printSettings: { ...defaultSettings.printSettings, ...stored?.printSettings, ...apiSettings.printSettings },
           permissions: { ...defaultSettings.permissions, ...stored?.permissions, ...apiSettings.permissions },
           printers: apiSettings.printers || stored?.printers || defaultPrinters,
@@ -421,7 +390,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       store: updates.store ? { ...settings.store, ...updates.store } : settings.store,
       notifications: updates.notifications ? { ...settings.notifications, ...updates.notifications } : settings.notifications,
       pos: updates.pos ? { ...settings.pos, ...updates.pos } : settings.pos,
-      security: updates.security ? { ...settings.security, ...updates.security } : settings.security,
       printSettings: updates.printSettings ? { ...settings.printSettings, ...updates.printSettings } : settings.printSettings,
       printers: updates.printers ?? settings.printers,
       permissions: updates.permissions ? { ...settings.permissions, ...updates.permissions } : settings.permissions,
@@ -434,6 +402,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     if (updates.store) payload.store = nextSettings.store
     if (updates.pos) payload.pos = nextSettings.pos
     if (updates.printers) payload.printers = nextSettings.printers
+    if (updates.permissions) payload.permissions = nextSettings.permissions
 
     if (Object.keys(payload).length === 0) {
       return true
@@ -461,8 +430,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       store: settings.store,
       pos: settings.pos,
       printers: settings.printers,
+      permissions: settings.permissions,
     })
-  }, [settings.store, settings.pos, settings.printers, updateSettings])
+  }, [settings.store, settings.pos, settings.printers, settings.permissions, updateSettings])
 
   // Update functions
   const updateStoreSettings = useCallback((updates: Partial<StoreSettings>) => {
@@ -483,13 +453,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSettings(prev => ({
       ...prev,
       pos: { ...prev.pos, ...updates },
-    }))
-  }, [])
-
-  const updateSecuritySettings = useCallback((updates: Partial<SecuritySettings>) => {
-    setSettings(prev => ({
-      ...prev,
-      security: { ...prev.security, ...updates },
     }))
   }, [])
 
@@ -539,6 +502,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const refreshPrinterStatus = useCallback(async (id: string) => {
+    // Simulate network connectivity check
     await new Promise(resolve => setTimeout(resolve, 1000))
 
     setSettings(prev => {
@@ -550,15 +514,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           }
 
           let status: PrinterDevice['status'] = 'online'
+          
+          // Basic validation for network printers
           if (printer.connectionType === 'network') {
-            if (!printer.ipAddress) {
+            if (!printer.ipAddress || !printer.port || printer.port <= 0) {
               status = 'offline'
-            } else if (!printer.port || printer.port <= 0) {
-              status = 'error'
             }
+            // In a real implementation, you would test actual connectivity here
+          } else if (printer.connectionType === 'usb') {
+            // For USB printers, assume they're online if configured
+            status = 'online'
+          } else if (printer.connectionType === 'bluetooth') {
+            // For Bluetooth printers, assume they're online if configured
+            status = 'online'
           }
 
-          return { ...printer, status }
+          return { ...printer, status, lastUsed: new Date() }
         }),
       }
       writeStoredSettings(nextSettings)
@@ -616,11 +587,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetPermissionsToDefaults = useCallback(() => {
-    setSettings(prev => ({
-      ...prev,
+    const newSettings = {
+      ...settings,
       permissions: defaultPermissions,
-    }))
-  }, [])
+    }
+    setSettings(newSettings)
+    writeStoredSettings(newSettings)
+    return newSettings
+  }, [settings])
 
   const resetToDefaults = useCallback(() => {
     setSettings(defaultSettings)
@@ -635,7 +609,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         updateStoreSettings,
         updateNotificationSettings,
         updatePOSSettings,
-        updateSecuritySettings,
         updatePrintSettings,
         addPrinter,
         updatePrinter,

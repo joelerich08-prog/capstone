@@ -25,6 +25,7 @@ interface AuthContextType {
   register: (data: RegisterUserData) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   checkAuth: () => boolean
+  refreshPermissions: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -173,6 +174,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return !!user
   }, [user])
 
+  const refreshPermissions = useCallback(async () => {
+    try {
+      const data = await apiFetch<AuthResponse>('auth/me.php')
+      setPermissions(data.permissions)
+    } catch (error) {
+      console.error('Failed to refresh permissions:', error)
+    }
+  }, [])
+
   if (!hasMounted) {
     return null
   }
@@ -188,6 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         checkAuth,
+        refreshPermissions,
       }}
     >
       {children}

@@ -4,7 +4,7 @@ const stripTrailingSlash = (value: string) => value.replace(/\/+$|^\s+|\s+$/g, '
 const stripLeadingSlash = (value: string) => value.replace(/^\/+/, '')
 
 export const API_BASE_URL = stripTrailingSlash(
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost/capstone-update'
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost/capstone-update/api'
 )
 
 const SESSION_TOKEN_KEYS = ['sessionToken', 'authToken', 'token']
@@ -52,6 +52,9 @@ export async function apiFetch<T = unknown>(input: string, init: ApiFetchOptions
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`)
   }
+
+  // Add cache-busting header for CORS requests
+  headers.set('X-Cache-Bust', Date.now().toString())
 
   const response = await fetch(url, {
     ...init,
