@@ -19,6 +19,7 @@ import { useCart } from '@/contexts/cart-context'
 import { useInventory } from '@/contexts/inventory-context'
 import { useSettings } from '@/contexts/settings-context'
 import { formatPeso } from '@/lib/utils/currency'
+import { resolveAssetUrl } from '@/lib/api-client'
 import { POSCart } from './pos-cart'
 import { PaymentModal } from './payment-modal'
 import { Search, Package, Grid3X3, List, Box, Layers } from 'lucide-react'
@@ -119,7 +120,7 @@ export function POSTerminal({ readOnly = false }: { readOnly?: boolean }) {
   }
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-12rem)]">
+    <div className="flex gap-4 h-[calc(100vh-10rem)]">
       {/* Product Selection */}
       <Card className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <CardHeader className="pb-3 shrink-0">
@@ -180,10 +181,10 @@ export function POSTerminal({ readOnly = false }: { readOnly?: boolean }) {
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1 overflow-hidden p-0 min-h-96">
+        <CardContent className="flex-1 overflow-hidden p-0 min-h-[calc(100vh-16rem)]">
           <ScrollArea className="h-full px-4 pb-4">
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {filteredProducts.map(product => {
                   const inventory = getInventory(product.id)
                   return (
@@ -194,8 +195,19 @@ export function POSTerminal({ readOnly = false }: { readOnly?: boolean }) {
                       className={`flex flex-col items-center p-3 rounded-lg border bg-card hover:bg-accent transition-colors text-left ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`}
                     >
                       {settings.pos.showProductImages && (
-                        <div className="flex size-12 items-center justify-center rounded-lg bg-muted mb-2">
-                          <Package className="size-6 text-muted-foreground" />
+                        <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-muted mb-2">
+                          {product.images && product.images.length > 0 ? (
+                            <img
+                              src={resolveAssetUrl(product.images[0])}
+                              alt={product.name}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                              <Package className="size-6" />
+                            </div>
+                          )}
                         </div>
                       )}
                       <p className="text-sm font-medium text-center line-clamp-2">
@@ -229,8 +241,19 @@ export function POSTerminal({ readOnly = false }: { readOnly?: boolean }) {
                     >
                       <div className="flex items-center gap-3">
                         {settings.pos.showProductImages && (
-                          <div className="flex size-10 items-center justify-center rounded bg-muted">
-                            <Package className="size-5 text-muted-foreground" />
+                          <div className="relative h-10 w-10 overflow-hidden rounded bg-muted">
+                            {product.images && product.images.length > 0 ? (
+                              <img
+                                src={resolveAssetUrl(product.images[0])}
+                                alt={product.name}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                                <Package className="size-5" />
+                              </div>
+                            )}
                           </div>
                         )}
                         <div>
